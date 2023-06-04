@@ -1,0 +1,16 @@
+import sys
+from OBR import SegmentationEngine, BrailleClassifier, BrailleImage
+
+if _name_ == '_main_':
+    if len(sys.argv) == 1:
+        print("./digest.py [PATH TO SCANNED BRAILLE IMAGE(S)]")
+        sys.exit(0)
+
+    classifier = BrailleClassifier()
+    for path in sys.argv[1:]:
+        img = BrailleImage(path)
+        for letter in SegmentationEngine(image=img):
+            letter.mark()
+            classifier.push(letter)
+
+    print(classifier.digest())
