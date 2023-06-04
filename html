@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optical Braille Recognition</title>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <style>
+        #preview{
+            height: 400px;
+            width: 1000px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+       <center> <h1> Braille Image to Audio</h1>
+        <p class="lead">Upload a scanned Braille image and get the text representation.</p></center>
+        <div id="upload-form" class="mt-4">
+            <form id="braille-upload" method="POST" action="/digest" enctype="multipart/form-data">
+                <div class="input-group">
+                    <input type="file" class="form-control" name="file" accept="image/*">
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+        <div id="results" class="mt-4">
+            <div id="image-preview" style="display: none;">
+                <h3>Uploaded Image:</h3>
+                <img id="preview" src="#" alt="Uploaded Image" class="img-fluid">
+            </div>
+            <div id="digest" style="display: none;">
+                <h3>Digest:</h3>
+                <p id="digest-text"></p>
+                <div class="mt-4">
+                    <button id="text-to-speech" class="btn btn-success">Text to Speech</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const uploadForm = document.getElementById('braille-upload');
+            const imagePreview = document.getElementById('image-preview');
+            const previewImage = document.getElementById('preview');
+            const digestSection = document.getElementById('digest');
+            const digestText = document.getElementById('digest-text');
+            const textToSpeechButton = document.getElementById('text-to-speech');
+            const speechSynthesis = window.speechSynthesis;
+
+            uploadForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const fileInput = document.querySelector('input[type="file"]');
+                const file = fileInput.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/digest', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.message);
+                            return;
+                        }
+                        const imgId = data.img_id;
+                        previewImage.src = `/procimage/${imgId}`;
+                        imagePreview.style.display = 'block';
+                        digestText.textContent = data.digest;
+                        digestSection.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            });
+
+            textToSpeechButton.addEventListener('click', () => {
+                const text = digestText.textContent;
+                const utterance = new SpeechSynthesisUtterance(text);
+                speechSynthesis.speak(utterance);
+            });
+        });
+    </script>
+</body>
+
+</html>
